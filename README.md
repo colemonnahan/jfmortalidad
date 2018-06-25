@@ -1,3 +1,4 @@
 # jfmortality
 
-Estimar la mortalidad de los langostas en Juan Fernandez
+Un proyecto para estimar la mortalidad de las langostas en la isla Juan
+Fernandez, Chile.
