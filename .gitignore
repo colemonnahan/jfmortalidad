@@ -1,1 +1,4 @@
 datos
+*.dll
+*.exe
+*.o
