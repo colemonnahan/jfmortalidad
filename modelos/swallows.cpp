@@ -141,6 +141,9 @@ Type objective_function<Type>::operator() ()
      nll-= log(chi(i,last(i)+1-1));
   }
   Type nld=nll+nlp; // negative log density
+  REPORT(fameffphi_raw);
+  REPORT(fameffp_raw);
+  REPORT(yeareffphi_raw);
   REPORT(p);
   REPORT(chi);
   REPORT(phi);

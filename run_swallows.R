@@ -17,4 +17,10 @@ obj <- MakeADFun(data=data, parameters=inits,
                  random=c('fameffphi_raw', 'fameffp_raw', 'yeareffphi_raw'))
 ## Adjustar con efectos aleatorios
 opt <- nlminb(obj$par, obj$fn, obj$gr)
-opt$par
+
+## extraer los parametros optimal para usarlos en la simulacion
+dput(as.vector(round(opt$par,2)[4:20]))
+rep <- obj$report()
+dput(round(rep$fameffp_raw,2))
+dput(round(rep$fameffphi_raw,2))
+dput(round(rep$yeareffphi_raw,2))
