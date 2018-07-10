@@ -1,9 +1,9 @@
-## Un archivo temporario para hacer una simulacion
+##### Un archivo temporario para hacer una simulacion
 
-## data inputs
-I = 322
-K= 18
-nfam=72
+#### La entrada de los datos
+I <- 322                                 # numero de los individuos
+K <- 18                                   # numero de los periodos
+nfam <- 72                                 # numero de las familias
 
 ## make sure each one is represented at least once
 family <- (c(1:nfam, sample(1:nfam, size=I-nfam, replace=TRUE)))
@@ -13,9 +13,9 @@ carez <- tmp[family]
 ## age of fledling, centered
 year <- sort(sample(1:4, size=I, replace=TRUE))
 agec <- 1:K-mean(1:K)
-## CH and last are calculated after generating data
 
-## true parameters
+## los parametros de usar en la simulacion, por ahora son iguales que el
+## adjuste de los datos reales.
 sigmayearphi=1.06
 sigmaphi=-.77
 sigmap=-.25
@@ -24,6 +24,7 @@ a=c(1.04, 0.98, 0.41, 0.43, 0.58, 0.97, 0.59, 0.84, 0.38, -0.53,
 a1=0.68
 b0=c(2.15, 1.93, 3.39, 3.33)
 b1=c(0.05, -.3, -.4, -0.06)
+## effectos aleatorios
 fameffp_raw <-
   c(0.47, -0.86, 1.22, -0.53, -0.36, 1.11, -1.2, -0.81, 0.35, 0.22,
     -0.12, -0.17, -0.88, 1.04, -1.16, 0.22, 1.42, -0.43, 0.16, -0.01,
@@ -43,12 +44,12 @@ fameffphi_raw <-
     0.07, -0.19, 0.16, -0.51, 0.61, 0.5, -1.31, 0.01, 0.48, -0.36,
     1.31, -0.54)
 yeareffphi_raw <- c(0.78, 0.97, 1.1, 0.98)
+## componente de observacion
 CH <- matrix(NA, I,K)
 last <- rep(NA, len=I)
 
 p <- matrix(NA, nrow=I, ncol=K) # capture probability
 phi <- matrix(NA, I, K-1);   # survival probability
-## chi <- matrix(NA, I,K+1);   # probability never seen again
 sigmayearphi2 <- exp(sigmayearphi)
 sigmaphi2 <- exp(sigmaphi)
 sigmap2 <- exp(sigmap)
@@ -92,9 +93,3 @@ simpars <- list(sigmayearphi=sigmayearphi, sigmaphi=sigmaphi,
                 sigmap=sigmap, a=a, a1=a1, b0=b0, b1=b1,
                 fameffphi_raw=fameffphi_raw,
                 fameffp_raw=fameffp_raw, yeareffphi_raw=yeareffphi_raw)
-par(mfrow=c(1,3))
-plot(data$last, main='Real data')
-plot(last, main='Simulated data')
-plot(opt$par, as.vector(unlist(simpars[1:7])), main='Parameters',
-     xlab='Real', ylab='Simulated')
-abline(0,1)
