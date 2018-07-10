@@ -2,7 +2,9 @@
 ## CJS modelo. Examina el archivo swallows.stan para ver documentacion del
 ## modelo. Vamos a usarlo como el punto de partida de construir nuestro
 ## modelo.
+
 library(TMB)
+setwd("C:/git/jfmortalidad")
 data <- readRDS('datos/swallows_datos.RDS')
 inits <- list(
   sigmayearphi=.7, sigmaphi=.5, sigmap=.9, a=rep(3.5, len=data$K-1), a1=0,
