@@ -1,22 +1,4 @@
 /// See file swallows.stan for documentation 
-
-#include <TMB.hpp>
-// Hand-coded Cauchy distribution
-template<class Type>
-Type dcauchy(Type x, Type mean, Type shape, int give_log=0){
-  Type logres = 0.0;
-  logres-= log(M_PI);
-  logres-= log(shape);
-  // Note, this is unstable and should switch to log1p formulation
-  logres-= log(1 + pow( (x-mean)/shape ,2));
-  if(give_log) return logres; else return exp(logres);
-}
-template<class Type>
-Type inv_logit(Type x){
-  Type y= 1/(1+exp(-x));
-  return(y);
-}
-
 template<class Type>
 Type objective_function<Type>::operator() ()
 {
@@ -44,7 +26,7 @@ Type objective_function<Type>::operator() ()
   DATA_IVECTOR(family);
   DATA_IVECTOR(last);
 
-  // fixed effects -- bounds added in R
+  // efectos fijos
   PARAMETER(sigmayearphi);
   PARAMETER(sigmaphi);
   PARAMETER(sigmap);
@@ -52,13 +34,11 @@ Type objective_function<Type>::operator() ()
   PARAMETER(a1);
   PARAMETER_VECTOR(b0);
   PARAMETER_VECTOR(b1);
-  // non-centered random effects
+  // non-centered efectos aleatorios
   PARAMETER_VECTOR(fameffphi_raw);
   PARAMETER_VECTOR(fameffp_raw);
   PARAMETER_VECTOR(yeareffphi_raw);
-
-  Type nlp=0.0; // negative log prior
-  Type nll=0.0; // negative log likelihood
+  Type nll=0.0; // negativa log verosimiltud
   matrix<Type> p(I,K);
   matrix<Type> phi(I,K-1);
   matrix<Type> chi(I,K+1);
@@ -67,9 +47,6 @@ Type objective_function<Type>::operator() ()
   Type sigmayearphi2=exp(sigmayearphi);
   Type sigmaphi2=exp(sigmaphi);
   Type sigmap2=exp(sigmap);
-  // Jacobian adjustment for variances
-  nll -= sigmaphi + sigmayearphi + sigmap;
-
 
   p.setZero();
   phi.setZero();
@@ -106,15 +83,6 @@ Type objective_function<Type>::operator() ()
     chi(i,1-1) = (1 - p(i,1-1)) * chi(i,2-1);
   }
 
-  // priors
-  nlp-= dnorm(b0, Type(0.0), Type(5), true).sum();
-  nlp-= dnorm(b1, Type(0.0), Type(5), true).sum();
-  nlp-= dnorm(a, Type(0.0), Type(1.5), true).sum();
-  nlp-= dnorm(a1, Type(0.0), Type(5), true);
-  nlp-= dcauchy(sigmaphi2, Type(0), Type(1.0), true);
-  nlp-= dnorm(sigmayearphi2, Type(0), Type(3), true);
-  nlp-= dcauchy(sigmap2, Type(0), Type(1.0), true);
-
   // random effects; non-centered
   nll-=dnorm(fameffphi_raw, Type(0.0), Type(1.0), true).sum();
   nll-=dnorm(fameffp_raw,Type(0.0), Type(1.0), true).sum();
@@ -124,7 +92,6 @@ Type objective_function<Type>::operator() ()
   for(int i=0; i<I; i++){ // loop over each individual
     // probability of survival, known alive since k<last
     for (int t=1; t<last(i); t++) {
-      // ones[i,t]~bernoulli(phi[i, t-1]);
     	nll-= log(phi(i,t-1));
     }
     // // probability of observation given known alive
@@ -137,15 +104,13 @@ Type objective_function<Type>::operator() ()
       }
     }
     // probability of no observations after time period last
-    // ones2[i]~bernoulli(chi[i,last[i]+1]);
      nll-= log(chi(i,last(i)+1-1));
   }
-  Type nld=nll+nlp; // negative log density
   REPORT(fameffphi_raw);
   REPORT(fameffp_raw);
   REPORT(yeareffphi_raw);
   REPORT(p);
   REPORT(chi);
   REPORT(phi);
-  return(nld);
+  return(nll);
 }
