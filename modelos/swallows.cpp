@@ -1,4 +1,16 @@
-/// See file swallows.stan for documentation 
+/// Un TMB modelo de tipo Cormack-Jolly-Seber de seccion 14.5 of
+/// Korner-Nievergelt et al 2015. Actualizado para TMB y maximo
+/// verosimiltud. Cole Monnahan, 7/2018.
+
+#include <TMB.hpp>
+
+// logit funcion
+template<class Type>
+Type inv_logit(Type x){
+  Type y= 1/(1+exp(-x));
+  return(y);
+}
+
 template<class Type>
 Type objective_function<Type>::operator() ()
 {
@@ -16,15 +28,15 @@ Type objective_function<Type>::operator() ()
   //  $ agec  : num [1:18] -8.5 -7.5 -6.5 -5.5 -4.5 -3.5 -2.5 -1.5 -0.5 0.5 ...
   //  $ family: num [1:322] 5 5 5 5 5 1 1 1 4 4 ...
   //  $ last  : int [1:322] 10 13 10 15 10 4 3 18 10 12 ...
-  DATA_INTEGER(I);
-  DATA_INTEGER(K);
-  DATA_INTEGER(nfam);
-  DATA_MATRIX(CH);
-  DATA_VECTOR(carez);
-  DATA_IVECTOR(year);
-  DATA_VECTOR(agec);
-  DATA_IVECTOR(family);
-  DATA_IVECTOR(last);
+  DATA_INTEGER(I);              // numero de los individuos
+  DATA_INTEGER(K);              // numero de los periodos
+  DATA_INTEGER(nfam);		//  numero de las familias
+  DATA_MATRIX(CH); 		// la historia de las capturas (0/1)
+  DATA_VECTOR(carez);		// covariable
+  DATA_IVECTOR(year);		// indice de los anos
+  DATA_VECTOR(agec);		// covariable
+  DATA_IVECTOR(family);		// indice de las familias
+  DATA_IVECTOR(last);		// el ultimo periodo visto
 
   // efectos fijos
   PARAMETER(sigmayearphi);
@@ -38,12 +50,12 @@ Type objective_function<Type>::operator() ()
   PARAMETER_VECTOR(fameffphi_raw);
   PARAMETER_VECTOR(fameffp_raw);
   PARAMETER_VECTOR(yeareffphi_raw);
-  Type nll=0.0; // negativa log verosimiltud
-  matrix<Type> p(I,K);
-  matrix<Type> phi(I,K-1);
-  matrix<Type> chi(I,K+1);
+  Type nll=0.0;			// negativa log verosimiltud
+  matrix<Type> p(I,K); 		// probabilidad de las capturas
+  matrix<Type> phi(I,K-1);	// prob. de la sobrevivencia
+  matrix<Type> chi(I,K+1);	// prob. nunca de ver despues un periodo
 
-  // To bound below by zero
+  // para constrenir mas que 0
   Type sigmayearphi2=exp(sigmayearphi);
   Type sigmaphi2=exp(sigmaphi);
   Type sigmap2=exp(sigmap);
@@ -54,26 +66,26 @@ Type objective_function<Type>::operator() ()
 
   int k;
   Type x;
-  // TMB indexes from 0 not 1, so need to be careful to adjust that
-  // below. I've added (-1) where needed.
+  // TMB usa indices de 0, no de 1, entoces tenemos que estar cuidadoso, y
+  // uso un "-1" para ser claro que pasa.
   for(int i=0; i<I; i++){ // loop over each individual
-    // calculate phi as a function of fixed and random effects
+    // calcular prob. capturas como una funcion de efectos y covariables
     for(int t=0; t<(K-1); t++) {
       x=a(t)+ a1*carez(i)+
       	sigmayearphi2*yeareffphi_raw(year(i)-1)+
       	sigmaphi2*fameffphi_raw(family(i)-1);
       phi(i,t) = inv_logit(x);
     }
-    // calculate p as a function of fixed and random effects
-    p(i,1-1) = 1;  // first occasion is marking occasion
+    // calcular prob. sobrevivencia como una funcion de efectos y
+    // covariables
+    p(i,1-1) = 1;  // periodo uno es la marca 
     for(int t=1; t<K; t++){
       x=b0(year(i)-1)+ b1(year(i)-1)*agec(t)+
       	sigmap2*fameffp_raw(family(i)-1);
       p(i,t) = inv_logit(x);
     }
-    // probabilitiy of never being seen after last observation. ind here is
-    // a reverse index so this loop goes from K:2, recursively calculating
-    // backward.
+    // la probabilidad de no ser visto nunca mas, usa un indice reverso
+    // para calcular hacia atras usando recursion.
     chi(i,K+1-1) = 1.0;
     k = K;
     while (k > 1) {
@@ -83,29 +95,30 @@ Type objective_function<Type>::operator() ()
     chi(i,1-1) = (1 - p(i,1-1)) * chi(i,2-1);
   }
 
-  // random effects; non-centered
+  //// calcular la verosimiltud
+  // efectos aleatorios
   nll-=dnorm(fameffphi_raw, Type(0.0), Type(1.0), true).sum();
   nll-=dnorm(fameffp_raw,Type(0.0), Type(1.0), true).sum();
   nll-=dnorm(yeareffphi_raw, Type(0.0), Type(1.0), true).sum();
-
-  // // likelihood
-  for(int i=0; i<I; i++){ // loop over each individual
-    // probability of survival, known alive since k<last
+  // los datos
+  for(int i=0; i<I; i++){ 
+    // probabilidad de sobrevivencia, que es conocido porque k<last
     for (int t=1; t<last(i); t++) {
     	nll-= log(phi(i,t-1));
     }
-    // // probability of observation given known alive
+    // probabilidad de captura, dado viva (como CH[i,t]~bernoulli(p[i,t]);)
     for(int t=0; t< last(i); t++){
-      // CH[i,t]~bernoulli(p[i,t]);
       if(CH(i,t)==1){
     	nll-= log(p(i,t));
       } else {
     	nll-= log(1-p(i,t));
       }
     }
-    // probability of no observations after time period last
-     nll-= log(chi(i,last(i)+1-1));
+    // probabilidad de no ser capturado despues el proximo periodo fue visto 
+    nll-= log(chi(i,last(i)+1-1));
   }
+
+  // Informes sin incertidumbre
   REPORT(fameffphi_raw);
   REPORT(fameffp_raw);
   REPORT(yeareffphi_raw);
@@ -114,3 +127,4 @@ Type objective_function<Type>::operator() ()
   REPORT(phi);
   return(nll);
 }
+// final del archivo
