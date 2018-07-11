@@ -2,3 +2,5 @@ datos
 *.dll
 *.exe
 *.o
+.Rproj.user
+*.Rhistory
