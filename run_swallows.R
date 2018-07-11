@@ -4,7 +4,6 @@
 ## modelo.
 
 library(TMB)
-setwd("C:/git/jfmortalidad")
 data <- readRDS('datos/swallows_datos.RDS')
 inits <- list(
   sigmayearphi=.7, sigmaphi=.5, sigmap=.9, a=rep(3.5, len=data$K-1), a1=0,
@@ -30,7 +29,9 @@ plot(opt$par, as.vector(unlist(simpars[1:7])), main='Parameters',
      xlab='Real', ylab='Simulated')
 abline(0,1)
 ### adjusta el modelo con los datos simulados
-obj <- MakeADFun(data=simdata, parameters=inits,
+compile('modelos/cjs_jf.cpp')
+dyn.load(dynlib('modelos/cjs_jf'))
+obj <- MakeADFun(data=simdata, parameters=simpars, DLL='cjs_jf',
                  random=c('fameffphi_raw', 'fameffp_raw', 'yeareffphi_raw'))
 opt <- nlminb(obj$par, obj$fn, obj$gr)
 rep <- sdreport(obj)
