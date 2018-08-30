@@ -35,7 +35,7 @@ Type objective_function<Type>::operator() ()
   Type x;
   // TMB usa indices de 0, no de 1, entoces tenemos que estar cuidadoso, y
   // uso un "-1" para ser claro que pasa.
-  for(int i=0; i<I; i++){ // loop over each individual
+  for(int i=0; i<I; i++){ // iterando sobre cada individuos
     // calcular prob. capturas como una funcion de efectos y covariables
     for(int t=0; t<(K-1); t++) {
       x=phi0;
