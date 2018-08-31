@@ -39,3 +39,12 @@ ggplot(data=results) +
   geom_point(aes(x=rep, y=est))+
   geom_hline(aes(yintercept=true), col='red')+
   facet_wrap('par')
+
+## Las relaciones de la simulacion
+par(mfrow=c(1,2))
+x <- 0:15
+plot(x, exp(-M-r*x), ylim=c(0,1), type='l',
+     ylab='Probabilidad de sobrevivencia', xlab='Numero de recapturas')
+x <- 0:2000
+plot(x, 1*(1-exp(-k*x)), type='l', ylim=c(0,1),
+     ylab='Probabilidad de captura', xlab='Esfuerza (trampas)')
