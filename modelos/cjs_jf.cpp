@@ -55,7 +55,7 @@ Type objective_function<Type>::operator() ()
     // para calcular hacia atras usando recursion.
     chi(i,K+1-1) = 1.0;
     kk = K;
-    while (kk > 1) {
+    while (kk > last(i)) {
       chi(i,kk-1) = (1 - phi(i,kk-1-1)) + phi(i,kk-1-1) * (1 - p(i,kk-1)) * chi(i,kk+1-1);
       kk = kk - 1;
     }
