@@ -38,7 +38,7 @@ ggplot(data=results) +
   geom_linerange(aes(x=rep, ymin=est-1.96*se, ymax=est+1.96*se)) +
   geom_point(aes(x=rep, y=est))+
   geom_hline(aes(yintercept=true), col='red')+
-  facet_wrap('par')
+  facet_wrap('par', scales='free')
 
 ## Las relaciones de la simulacion
 par(mfrow=c(1,2))
