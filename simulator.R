@@ -15,7 +15,7 @@ K <- 28                                   # numero de los periodos
 M <- .03
 r <- .1
 r <- .01
-k <- .002
+k <- .0001
 
 ## componente de observacion
 counts <- alive <- p <- CH <- matrix(NA, I,K)
@@ -23,7 +23,8 @@ last <- rep(NA, len=I)
 p <- matrix(NA, nrow=I, ncol=K) # capture probability
 phi <- matrix(NA, I, K);   # survival probability
 last <- rep(NA, len=I)
-effort <- rep(1000, len=K)
+effort <- runif(K, min=50, max=2000)
+effort[14:19] <- 0
 
 for(i in 1:I){
   ## inicializacion
@@ -34,7 +35,7 @@ for(i in 1:I){
   for(t in 2:K) {
     ## calcula sobrevivencia
     phi[i,t] <- exp(-M-counts[i,t-1]*r)
-    ## calcula tprobabilidad de recaptura por todos los periodos except el
+    ## calcula probabilidad de recaptura para todos los periodos except el
     ## primero porque conocido (captura)
     p[i,t] <- 1*(1-exp(-k*effort[t]))
     ## vida ahora solo si vida y sobrevivido en el periodo anterior
