@@ -47,5 +47,7 @@ for(i in 1:I){
   last[i] <- tail(which(CH[i,]==1), n=1)
 }
 
-simdata <- list(I=I, K=K, CH=CH, last=last, counts=counts)
-simpars <- list(phi0=phi0, p0=p0)
+simdata <- list(I=I, K=K, CH=CH, last=last, counts=counts, effort=effort)
+simpars <- list(logM=log(M), logr=log(r), logk=log(k))
+
+

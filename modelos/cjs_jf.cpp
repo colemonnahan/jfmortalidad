@@ -18,43 +18,46 @@ Type objective_function<Type>::operator() ()
   DATA_INTEGER(K);              // numero de los periodos
   DATA_MATRIX(CH);		// la historia de las capturas (0/1) [IxK]
   DATA_IVECTOR(last);		// el ultimo periodo visto
-
+  DATA_MATRIX(counts);		// numeros de recapturas (individos x periodos)
+  DATA_VECTOR(effort);		// la esfuerza por cada periodo
+  
   // efectos fijos
-  PARAMETER(phi0);		// constante prob. de sobrevivencia
-  PARAMETER(p0);		// constante prob. de captura
+  PARAMETER(logM);		// mortalidad de naturleza
+  PARAMETER(logr);		// effecto de los numeros de capturas
+  PARAMETER(logk);		// effecto de esfuerza de probabilidad de captura
   Type nll=0.0;			// negativa log verosimiltud
   matrix<Type> p(I,K); 		// probabilidad de las capturas
-  matrix<Type> phi(I,K-1);	// prob. de la sobrevivencia
+  matrix<Type> phi(I,K);	// prob. de la sobrevivencia
   matrix<Type> chi(I,K+1);	// prob. nunca de ver despues un periodo
 
   p.setZero();
   phi.setZero();
   chi.setZero();
 
-  int k;
-  Type x;
+  int kk;
+  Type M=exp(logM);
+  Type r=exp(logr);
+  Type k=exp(logk);
   // TMB usa indices de 0, no de 1, entoces tenemos que estar cuidadoso, y
   // uso un "-1" para ser claro que pasa.
   for(int i=0; i<I; i++){ // iterando sobre cada individuos
-    // calcular prob. capturas como una funcion de efectos y covariables
-    for(int t=0; t<(K-1); t++) {
-      x=phi0;
-      phi(i,t) = inv_logit(x);
-    }
-    // calcular prob. sobrevivencia como una funcion de efectos y
-    // covariables
-    p(i,1-1) = 1;  // periodo uno es la marca 
-    for(int t=1; t<K; t++){
-      x=p0;
-      p(i,t) = inv_logit(x);
+    // inicializacion estan vivo en periodo uno
+    phi(i,1-1)=exp(-M-counts(i,1-1)*r);
+    p(i,1-1)=1;
+    for(int t=1; t<K; t++) {
+      // calcular prob. capturas como una funcion de efectos y covariables
+      p(i,t) = 1*(1-exp(-k*effort(t)));
+      // calcular prob. sobrevivencia como una funcion de efectos y
+      // covariables
+      phi(i,t) = exp(-M-counts(i,t-1)*r);
     }
     // la probabilidad de no ser visto nunca mas, usa un indice reverso
     // para calcular hacia atras usando recursion.
     chi(i,K+1-1) = 1.0;
-    k = K;
-    while (k > 1) {
-      chi(i,k-1) = (1 - phi(i,k-1-1)) + phi(i,k-1-1) * (1 - p(i,k-1)) * chi(i,k+1-1);
-      k = k - 1;
+    kk = K;
+    while (kk > 1) {
+      chi(i,kk-1) = (1 - phi(i,kk-1-1)) + phi(i,kk-1-1) * (1 - p(i,kk-1)) * chi(i,kk+1-1);
+      kk = kk - 1;
     }
     chi(i,1-1) = (1 - p(i,1-1)) * chi(i,2-1);
   }
@@ -77,7 +80,6 @@ Type objective_function<Type>::operator() ()
     // probabilidad de no ser capturado despues el proximo periodo fue visto 
     nll-= log(chi(i,last(i)+1-1));
   }
-
   return(nll);
 }
 // final del archivo
