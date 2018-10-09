@@ -1,8 +1,20 @@
 source("startup.R")
 
 ## Construye el modelo
+dyn.unload(dynlib('modelos/cjs_jf'))
 compile('modelos/cjs_jf.cpp')
 dyn.load(dynlib('modelos/cjs_jf'))
+
+## ## Probando que sirve
+## set.seed(32)
+## out <- simulator(TRUE)
+## obj <- MakeADFun(data=out$simdata, parameters=out$simpars, DLL='cjs_jf')
+## obj$fn()
+## obj$gr()
+## rep <- obj$report()
+## i <- 1
+## cbind(out$p[i,], rep$p[i,])
+## cbind(out$phi[i,], rep$phi[i,])
 
 ### Ahora simulamos datos similares que los reales y los adjustamos. Tienes
 ### que correr el codigo abajo primero.
@@ -12,8 +24,7 @@ coverage.list <- results.list <- list()
 ## simulator.R
 for(ii in 1:nrep){
   print(ii); set.seed(ii)
-  make.plots <- ii==1
-  out <- simulator(make.plots)
+  out <- simulator(ii==1)
   ## plot(simdata$last, main='Simulated data')
   ## adjusta el modelo con los datos simulados
   obj <- MakeADFun(data=out$simdata, parameters=out$simpars, DLL='cjs_jf')
@@ -39,5 +50,5 @@ g <- ggplot(data=results) +
   geom_linerange(aes(x=rep, ymin=est-1.96*se, ymax=est+1.96*se)) +
   geom_point(aes(x=rep, y=est))+
   geom_hline(aes(yintercept=true), col='red')+
-  facet_wrap('par', scales='free')
-ggsave('plots/simulaction_cobertura.png', g, width=7, height=5)
+  facet_wrap('par', scales='free', ncol=1)
+ggsave('plots/simulacion_cobertura.png', g, width=7, height=5)

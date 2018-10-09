@@ -3,6 +3,11 @@
 /// verosimiltud. Cole Monnahan, 7/2018.
 
 #include <TMB.hpp>
+// Function for detecting NAs
+template<class Type>
+bool isNA(Type x){
+  return R_IsNA(asDouble(x));
+}
 
 // logit funcion
 template<class Type>
@@ -21,6 +26,7 @@ Type objective_function<Type>::operator() ()
   DATA_MATRIX(counts);		// numeros de recapturas (individos x periodos)
   DATA_VECTOR(effort);		// la esfuerza por cada periodo
   DATA_VECTOR(lengths);		// longitudes de los individuos
+  DATA_IVECTOR(first);		// el primero periodo
   
   // efectos fijos
   PARAMETER(logM);		// mortalidad de naturleza
@@ -47,9 +53,9 @@ Type objective_function<Type>::operator() ()
   // uso un "-1" para ser claro que pasa.
   for(int i=0; i<I; i++){ // iterando sobre cada individuos
     // inicializacion estan vivo en periodo uno
-    phi(i,1-1)=exp(-M-counts(i,1-1)*r);
-    p(i,1-1)=1;
-    for(int t=1; t<K; t++) {
+    phi(i,first(i)-1)=exp(-M-counts(i,first(i)-1)*r);
+    p(i,first(i)-1)=1;
+    for(int t=first(i); t<K; t++) {
       // calcular prob. capturas como una funcion de efectos y covariables
       p(i,t) = 1*(1-exp(-k*effort(t)))/(1+exp(a+b*lengths(i)));
       // calcular prob. sobrevivencia como una funcion de efectos y
@@ -70,21 +76,27 @@ Type objective_function<Type>::operator() ()
   //// calcular la verosimiltud
   // los datos
   for(int i=0; i<I; i++){ 
-    // probabilidad de sobrevivencia, que es conocido porque k<last
-    for (int t=1; t<last(i); t++) {
+    // probabilidad de sobrevivencia, que es conocido porque first<k<last
+    for (int t=first(i); t<last(i); t++) {
     	nll-= log(phi(i,t-1));
     }
     // probabilidad de captura, dado viva (como CH[i,t]~bernoulli(p[i,t]);)
     for(int t=0; t< last(i); t++){
-      if(CH(i,t)==1){
-    	nll-= log(p(i,t));
-      } else {
-    	nll-= log(1-p(i,t));
+      // NA significa que no hubo esfuerzo en este periodo
+      if(!isNA(CH(i,t))){
+	if(CH(i,t)>=1){
+	  nll-= log(p(i,t));
+	} else {
+	  nll-= log(1-p(i,t));
+	}
       }
     }
     // probabilidad de no ser capturado despues el proximo periodo fue visto 
     nll-= log(chi(i,last(i)+1-1));
   }
+  REPORT(p);
+  REPORT(phi);
+  REPORT(CH);
   return(nll);
 }
 // final del archivo
