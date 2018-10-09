@@ -6,10 +6,32 @@ library(plyr)
 
 
 message("Cargando los datos...")
-CH <- read.csv("datos/CH_Matrix.csv")
-names(CH)[1:2] <- c("numero", "evento")
-CH$evento <- as.factor(CH$evento)
+df <- read.csv("datos/CH_Matrix.csv")
+names(df)[1:2] <- c("numero", "evento")
+df$evento <- as.factor(df$evento)
 individuo <- read.csv("datos/Green_tags.csv")
+individuo <- individuo[!is.na(individuo$Size),]
+sum(duplicated(unique(individuo$Tag_num)))
+sum(duplicated(unique(df$numero)))
+which.missing <- which(! df$numero %in% individuo$Tag_num)
+## which.missing <- which(! individuo$Tag_num %in% df$numero )
+df[which.missing,]
+df <- df[-which.missing,]
+nrow(df); nrow(individuo)
+df <- merge(x=individuo, y=df, by.x='Tag_num', by.y='numero')
+CH <- unname(as.matrix(df[, -(1:9)]))
+last <- as.numeric(apply(CH, 1, function(xx)
+  tail(which(!is.na(xx) & xx>0), n=1)))
+first <- as.numeric(apply(CH, 1, function(xx)
+  head(which(!is.na(xx) & xx>0), n=1)))
+counts <- unname(t(apply(CH,1, function(xx){
+  xx[is.na(xx)]=0
+  cumsum(xx)
+})))
+data <- list(I=nrow(CH), K=ncol(CH), CH=CH, last=last, counts=counts,
+             effort=rep(500, ncol(CH)), lengths=df$Size, first=first)
+
+
 
 message("Cargando las funciones...")
 ##### Una funcion temporaria para hacer una simulacion
