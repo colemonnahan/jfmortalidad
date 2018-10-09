@@ -5,13 +5,11 @@ ww <- 6
 hh <- 4
 
 
-CH <- read.csv("datos/CH_Matrix.csv")
-names(CH)[1:2] <- c("numero", "evento")
-CH$evento <- as.factor(CH$evento)
 CH.long <- melt(CH, id.vars=c("numero", "evento"),
                 variable.name='periodo', value.name='recapturas')
 CH.long$periodo <- as.numeric(gsub("X", "", x=CH.long$periodo))
 CH.long2 <- droplevels(subset(CH.long, !is.na(recapturas) & recapturas>0))
+
 
 g <- ggplot(CH.long2, aes(numero, y=periodo, color=evento)) +
   geom_jitter(width=0, alpha=.5, height=.1)
