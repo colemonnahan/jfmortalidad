@@ -20,6 +20,7 @@ Type objective_function<Type>::operator() ()
   DATA_IVECTOR(last);		// el ultimo periodo visto
   DATA_MATRIX(counts);		// numeros de recapturas (individos x periodos)
   DATA_VECTOR(effort);		// la esfuerza por cada periodo
+  DATA_VECTOR(lengths);		// longitudes de los individuos
   
   // efectos fijos
   PARAMETER(logM);		// mortalidad de naturleza
@@ -38,6 +39,10 @@ Type objective_function<Type>::operator() ()
   Type M=exp(logM);
   Type r=exp(logr);
   Type k=exp(logk);
+  // Selectividad es asumido conocido
+  Type a=20.65;
+  Type b=-.24;
+
   // TMB usa indices de 0, no de 1, entoces tenemos que estar cuidadoso, y
   // uso un "-1" para ser claro que pasa.
   for(int i=0; i<I; i++){ // iterando sobre cada individuos
@@ -46,7 +51,7 @@ Type objective_function<Type>::operator() ()
     p(i,1-1)=1;
     for(int t=1; t<K; t++) {
       // calcular prob. capturas como una funcion de efectos y covariables
-      p(i,t) = 1*(1-exp(-k*effort(t)));
+      p(i,t) = 1*(1-exp(-k*effort(t)))/(1+exp(a+b*lengths(i)));
       // calcular prob. sobrevivencia como una funcion de efectos y
       // covariables
       phi(i,t) = exp(-M-counts(i,t-1)*r);
