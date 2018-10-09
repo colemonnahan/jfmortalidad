@@ -57,10 +57,20 @@ for(i in 1:I){
 simdata <- list(I=I, K=K, CH=CH, last=last, counts=counts, effort=effort, lengths=lengths)
 simpars <- list(logM=log(M), logr=log(r), logk=log(k))
 
-par(mfrow=c(3,1))
-x <- seq(50,120, len=1000)
-plot(x, (1-exp(-k*20000))/(1+exp(a+b*x)), ylab='Prob. captura',
-     type='l', xlim=c(50,120), ylim=c(0,1))
-lines(x, (1-exp(-k*5000))/(1+exp(a+b*x)), col='red')
-hist(lengths, xlim=c(50,120))
-plot(last)
+if(make.plots){
+  par(mfcol=c(2,2))
+  x <- seq(50,120, len=1000)
+  plot(x, (1-exp(-k*20000))/(1+exp(a+b*x)), ylab='Prob. captura',
+       type='l', xlim=c(50,120), ylim=c(0,1), xlab='Longitud')
+  legend('topleft', legend=c('Max. Esfuerzo', 'Min. Esfuerzo'), lty=1, col=c(1,2))
+  lines(x, (1-exp(-k*5000))/(1+exp(a+b*x)), col='red')
+  hist(lengths, xlim=c(50,120), xlab='Longitud')
+  plot(0,0, xlim=c(1,K), ylim=c(0,1), xlab='Periodo',
+       ylab='Pr. captura de 5 individuos',
+       type='n')
+  trash <- sapply(1:5, function(i) lines(2:K, p[i,-1], col=1))
+  plot(0,0, xlim=c(1,K), ylim=c(.8,1), xlab='Periodo',
+       ylab='Pr. sobrevivencia de 5 individuos',
+       type='n')
+  trash <- sapply(1:5, function(i) lines(2:K, phi[i,-1], col=1))
+}

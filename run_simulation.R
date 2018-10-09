@@ -1,16 +1,15 @@
-library(TMB)
 compile('modelos/cjs_jf.cpp')
 dyn.load(dynlib('modelos/cjs_jf'))
 
 ### Ahora simulamos datos similares que los reales y los adjustamos. Tienes
 ### que correr el codigo abajo primero.
-nrep <- 100  ## numero de iteraciones de monte carlo
+nrep <- 10  ## numero de iteraciones de monte carlo
 coverage.list <- results.list <- list()
 ## no se puede usar la variable 'i' porque es usada en el archivo
 ## simulator.R
 for(ii in 1:nrep){
-  print(ii)
-  set.seed(ii)
+  print(ii); set.seed(ii)
+  make.plots <- ii==1
   source("simulator.R")
   ## plot(simdata$last, main='Simulated data')
   ## adjusta el modelo con los datos simulados
@@ -29,10 +28,9 @@ for(ii in 1:nrep){
 
 ## los parametros estimados deberian contener el valor de la simulacion
 ## aproximadamente 95% de los replicacions
-apply(do.call(rbind, coverage.list), 2, mean)
+apply(do.call(rbind, coverage.list), 2, mean, na.rm=TRUE)
 
 ## lo visualizar
-library(ggplot2)
 results <- do.call(rbind, results.list)
 ggplot(data=results) +
   geom_linerange(aes(x=rep, ymin=est-1.96*se, ymax=est+1.96*se)) +
@@ -40,11 +38,3 @@ ggplot(data=results) +
   geom_hline(aes(yintercept=true), col='red')+
   facet_wrap('par', scales='free')
 
-## Las relaciones de la simulacion
-par(mfrow=c(1,2))
-x <- 0:15
-plot(x, exp(-M-r*x), ylim=c(0,1), type='l',
-     ylab='Probabilidad de sobrevivencia', xlab='Numero de recapturas')
-x <- 0:2000
-plot(x, 1*(1-exp(-k*x)), type='l', ylim=c(0,1),
-     ylab='Probabilidad de captura', xlab='Esfuerzo (trampas)')
