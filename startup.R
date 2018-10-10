@@ -6,11 +6,13 @@ library(plyr)
 
 
 message("Cargando los datos...")
+esfuerzo <- read.csv('datos/Effort.txt')
 df <- read.csv("datos/CH_Matrix.csv")
 names(df)[1:2] <- c("numero", "evento")
 df$evento <- as.factor(df$evento)
 individuo <- read.csv("datos/Green_tags.csv")
 individuo <- individuo[!is.na(individuo$Size),]
+100*mean(individuo$Size>115)
 individuo$length <- (individuo$Size-1.469)/1.1578
 sum(duplicated(unique(individuo$Tag_num)))
 sum(duplicated(unique(df$numero)))
@@ -30,7 +32,7 @@ counts <- unname(t(apply(CH,1, function(xx){
   cumsum(xx)
 })))
 data <- list(I=nrow(CH), K=ncol(CH), CH=CH, last=last, counts=counts,
-             effort=rep(500, ncol(CH)), lengths=df$length, first=first)
+             effort=esfuerzo$Trap_haul, lengths=df$length, first=first)
 
 
 
@@ -39,7 +41,7 @@ message("Cargando las funciones...")
 simulator <- function(make.plots){
   ## La entrada de los datos
   I <- 7000                                 # numero de los individuos
-  K <- 28                                   # numero de los periodos
+  K <- 29                                   # numero de los periodos
   ## El primero event de las capturas es 1 (2nd octubre hasta 18 octubre
   ## 2008) con 3000 individuos
   ## El segundo es en periodo 10 con 2000 individuos
@@ -61,7 +63,7 @@ simulator <- function(make.plots){
   phi <- matrix(NA, I, K);   # survival probability
   last <- rep(NA, len=I)
   effort <- runif(K, min=500, max=2000)
-  effort[14:19] <- 0
+  effort[16:24] <- 0
   ## las longitudes de los individuos de los datos reales
   lengths <- sample(na.omit(individuo$length), size=I, replace=TRUE)
   for(i in 1:I){
@@ -90,7 +92,7 @@ simulator <- function(make.plots){
     ## el ultimo periodo en que un individuo fue visto
     last[i] <- tail(which(CH[i,]==1), n=1)
   }
-  CH[, 14:19] <- NA
+  CH[, 16:24] <- NA
   simdata <- list(I=I, K=K, CH=CH, last=last, counts=counts, effort=effort,
                   lengths=lengths, first=first)
   simpars <- list(logM=log(M), logr=log(r), logk=log(k))
