@@ -32,7 +32,8 @@ counts <- unname(t(apply(CH,1, function(xx){
   cumsum(xx)
 })))
 data <- list(I=nrow(CH), K=ncol(CH), CH=CH, last=last, counts=counts,
-             effort=esfuerzo$Trap_haul, lengths=df$length, first=first)
+             effort=esfuerzo$Trap_haul, lengths=df$length, first=first,
+             lengths_pred=seq(min(df$length), max(df$length), len=20))
 
 
 
