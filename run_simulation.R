@@ -16,6 +16,7 @@ dyn.load(dynlib('modelos/cjs_jf'))
 ## cbind(out$p[i,], rep$p[i,])
 ## cbind(out$phi[i,], rep$phi[i,])
 
+
 ### Ahora simulamos datos similares que los reales y los adjustamos. Tienes
 ### que correr el codigo abajo primero.
 nrep <- 50  ## numero de iteraciones de monte carlo
@@ -35,7 +36,7 @@ for(ii in 1:nrep){
   se <- sqrt(diag(rep$cov.fixed))
   true <- unlist(out$simpars)
   ## verifica que sirve
-  results.list[[ii]] <- data.frame(rep=ii,par=names(se), true=true, est=est, se=se,
+  results.list[[ii]] <- data.frame(replicate=ii,par=names(se), true=true, est=est, se=se,
                     covered= (true-2*se < est & est < true+2*se))
   coverage.list[[ii]] <- c((true-2*se < est & est < true+2*se))
 }
@@ -47,8 +48,8 @@ results <- do.call(rbind, results.list)
 
 ## lo visualizar
 g <- ggplot(data=results) +
-  geom_linerange(aes(x=rep, ymin=est-1.96*se, ymax=est+1.96*se)) +
-  geom_point(aes(x=rep, y=est))+
+  geom_linerange(aes(x=replicate, ymin=est-1.96*se, ymax=est+1.96*se)) +
+  geom_point(aes(x=replicate, y=est))+
   geom_hline(aes(yintercept=true), col='red')+
-  facet_wrap('par', scales='free', ncol=1)
+  facet_wrap('par', scales='free', ncol=2)
 ggsave('plots/simulacion_cobertura.png', g, width=7, height=5)

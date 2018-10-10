@@ -27,11 +27,14 @@ Type objective_function<Type>::operator() ()
   DATA_VECTOR(effort);		// la esfuerza por cada periodo
   DATA_VECTOR(lengths);		// longitudes de los individuos
   DATA_IVECTOR(first);		// el primero periodo
+  DATA_VECTOR(lengths_pred);	// para calcular selectividad
   
   // efectos fijos
   PARAMETER(logM);		// mortalidad de naturleza
   PARAMETER(logr);		// effecto de los numeros de capturas
   PARAMETER(logk);		// effecto de esfuerza de probabilidad de captura
+  PARAMETER(a); 		// efecto de la selectividad
+  PARAMETER(b); 		// efecto de la selectividad
   Type nll=0.0;			// negativa log verosimiltud
   matrix<Type> p(I,K); 		// probabilidad de las capturas
   matrix<Type> phi(I,K);	// prob. de la sobrevivencia
@@ -46,9 +49,9 @@ Type objective_function<Type>::operator() ()
   Type r=exp(logr);
   Type k=exp(logk);
   // Selectividad es asumido conocido
-  Type a=20.65;
-  Type b=-.24;
-
+  // Type a=20.65;
+  // Type b=-.24;
+    
   // TMB usa indices de 0, no de 1, entoces tenemos que estar cuidadoso, y
   // uso un "-1" para ser claro que pasa.
   for(int i=0; i<I; i++){ // iterando sobre cada individuos
@@ -94,13 +97,22 @@ Type objective_function<Type>::operator() ()
     // probabilidad de no ser capturado despues el proximo periodo fue visto 
     nll-= log(chi(i,last(i)+1-1));
   }
+
+  vector<Type> sel_pred(lengths_pred.size());
+  for(int i=0; i<sel_pred.size(); i++){
+    sel_pred(i)=1/(1+exp(a+b*lengths_pred(i)));
+  }
+  
   // reportando
   ADREPORT(M);
   ADREPORT(r);
   ADREPORT(k);
-  // REPORT(p);
-  // REPORT(phi);
-  // REPORT(CH);
+  ADREPORT(a);
+  ADREPORT(b);
+  ADREPORT(sel_pred);
+  REPORT(p);
+  REPORT(phi);
+  REPORT(CH);
   return(nll);
 }
 // final del archivo

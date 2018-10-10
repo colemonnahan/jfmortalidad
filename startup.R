@@ -94,8 +94,8 @@ simulator <- function(make.plots){
   }
   CH[, 16:24] <- NA
   simdata <- list(I=I, K=K, CH=CH, last=last, counts=counts, effort=effort,
-                  lengths=lengths, first=first)
-  simpars <- list(logM=log(M), logr=log(r), logk=log(k))
+                  lengths=lengths, first=first, lengths_pred=seq(60,115, by=1))
+  simpars <- list(logM=log(M), logr=log(r), logk=log(k), a=a, b=b)
   if(make.plots){
     par(mfcol=c(2,2))
     x <- seq(50,120, len=1000)
