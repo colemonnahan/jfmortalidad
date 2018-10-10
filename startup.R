@@ -11,6 +11,7 @@ names(df)[1:2] <- c("numero", "evento")
 df$evento <- as.factor(df$evento)
 individuo <- read.csv("datos/Green_tags.csv")
 individuo <- individuo[!is.na(individuo$Size),]
+individuo$length <- (individuo$Size-1.469)/1.1578
 sum(duplicated(unique(individuo$Tag_num)))
 sum(duplicated(unique(df$numero)))
 which.missing <- which(! df$numero %in% individuo$Tag_num)
@@ -19,7 +20,7 @@ df[which.missing,]
 df <- df[-which.missing,]
 nrow(df); nrow(individuo)
 df <- merge(x=individuo, y=df, by.x='Tag_num', by.y='numero')
-CH <- unname(as.matrix(df[, -(1:9)]))
+CH <- unname(as.matrix(df[, -(1:10)]))
 last <- as.numeric(apply(CH, 1, function(xx)
   tail(which(!is.na(xx) & xx>0), n=1)))
 first <- as.numeric(apply(CH, 1, function(xx)
@@ -29,7 +30,7 @@ counts <- unname(t(apply(CH,1, function(xx){
   cumsum(xx)
 })))
 data <- list(I=nrow(CH), K=ncol(CH), CH=CH, last=last, counts=counts,
-             effort=rep(500, ncol(CH)), lengths=df$Size, first=first)
+             effort=rep(500, ncol(CH)), lengths=df$length, first=first)
 
 
 
@@ -62,7 +63,7 @@ simulator <- function(make.plots){
   effort <- runif(K, min=500, max=2000)
   effort[14:19] <- 0
   ## las longitudes de los individuos de los datos reales
-  lengths <- sample(na.omit(individuo$Size), size=I, replace=TRUE)-20
+  lengths <- sample(na.omit(individuo$length), size=I, replace=TRUE)
   for(i in 1:I){
     if(i <= 3000) t0 <- 1
     if(i > 3000 & i <= 5000) t0 <- 10
