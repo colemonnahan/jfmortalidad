@@ -94,9 +94,13 @@ Type objective_function<Type>::operator() ()
     // probabilidad de no ser capturado despues el proximo periodo fue visto 
     nll-= log(chi(i,last(i)+1-1));
   }
-  REPORT(p);
-  REPORT(phi);
-  REPORT(CH);
+  // reportando
+  ADREPORT(M);
+  ADREPORT(r);
+  ADREPORT(k);
+  // REPORT(p);
+  // REPORT(phi);
+  // REPORT(CH);
   return(nll);
 }
 // final del archivo
