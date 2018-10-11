@@ -27,6 +27,7 @@ Type objective_function<Type>::operator() ()
   DATA_VECTOR(effort);		// la esfuerza por cada periodo
   DATA_VECTOR(lengths);		// longitudes de los individuos
   DATA_IVECTOR(first);		// el primero periodo
+  DATA_FACTOR(sexo);		// sexo de los individuos
   DATA_VECTOR(lengths_pred);	// para calcular selectividad
   DATA_VECTOR(esfuerzo_pred); // para calcular catchability
   
@@ -36,8 +37,10 @@ Type objective_function<Type>::operator() ()
   //  PARAMETER(logk);		// effecto de esfuerza de probabilidad de captura
   PARAMETER(a); 		// efecto de la selectividad
   PARAMETER(b); 		// efecto de la selectividad
-  PARAMETER_VECTOR(tau);	// efectos aleatorios por k
-  PARAMETER(mu_tau);
+  PARAMETER_VECTOR(tauM);	// efectos aleatorios por k por machos
+  PARAMETER_VECTOR(tauH);	// efectos aleatorios por k por hembras
+  PARAMETER(mu_tauM);
+  PARAMETER(mu_tauH);
   PARAMETER(logsigma_tau);
   Type nll=0.0;			// negativa log verosimiltud
   matrix<Type> p(I,K); 		// probabilidad de las capturas
@@ -56,8 +59,12 @@ Type objective_function<Type>::operator() ()
   // Selectividad es asumido conocido
   // Type a=20.65;
   // Type b=-.24;
-  vector<Type> k(K);
-  for(int t=0;t<K;t++) k(t)=exp(tau(t));
+  // la primero columna es por machos y la segunda por hembras
+  matrix<Type> k(K,2);
+  for(int t=0;t<K;t++) {
+    k(t,0)=exp(tauM(t));
+    k(t,1)=exp(tauH(t));
+  }
 
   // TMB usa indices de 0, no de 1, entoces tenemos que estar cuidadoso, y
   // uso un "-1" para ser claro que pasa.
@@ -67,7 +74,7 @@ Type objective_function<Type>::operator() ()
     p(i,first(i)-1)=1;
     for(int t=first(i); t<K; t++) {
       // calcular prob. capturas como una funcion de efectos y covariables
-      p(i,t) = 1*(1-exp(-k(t)*effort(t)))/(1+exp(a+b*lengths(i)));
+      p(i,t) = 1*(1-exp(-k(t,sexo(i))*effort(t)))/(1+exp(a+b*lengths(i)));
       // calcular prob. sobrevivencia como una funcion de efectos y
       // covariables
       phi(i,t) = exp(-M-counts(i,t-1)*r);
@@ -106,26 +113,35 @@ Type objective_function<Type>::operator() ()
   }
 
   // Probabilidad de los efectos aleatorios
-  nll-=dnorm(tau, mu_tau, sigma_tau, true).sum();
+  nll-=dnorm(tauM, mu_tauM, sigma_tau, true).sum();
+  nll-=dnorm(tauH, mu_tauH, sigma_tau, true).sum();
   
   vector<Type> sel_pred(lengths_pred.size());
   for(int i=0; i<sel_pred.size(); i++){
     sel_pred(i)=1/(1+exp(a+b*lengths_pred(i)));
   }
-  vector<Type> catchability_pred(esfuerzo_pred.size());
-  for(int i=0; i<catchability_pred.size(); i++){
+  vector<Type> catchabilityM_pred(esfuerzo_pred.size());
+  vector<Type> catchabilityH_pred(esfuerzo_pred.size());
+  for(int i=0; i<esfuerzo_pred.size(); i++){
     // dado el promedio de k
-    catchability_pred(i)=1-exp(-exp(mu_tau)*esfuerzo_pred(i));
+    catchabilityM_pred(i)=1-exp(-exp(mu_tauM)*esfuerzo_pred(i));
+    catchabilityH_pred(i)=1-exp(-exp(mu_tauH)*esfuerzo_pred(i));
   }
   
   // reportando
   ADREPORT(M);
   ADREPORT(r);
-  ADREPORT(k);
   ADREPORT(a);
   ADREPORT(b);
+  vector<Type> kM(K);
+  kM=k.col(0);
+  vector<Type> kH(K);
+  kH=k.col(1);
+  ADREPORT(kM);
+  ADREPORT(kH);
   ADREPORT(sel_pred);
-  ADREPORT(catchability_pred);
+  ADREPORT(catchabilityM_pred);
+  ADREPORT(catchabilityH_pred);
   REPORT(p);
   REPORT(phi);
   REPORT(CH);
