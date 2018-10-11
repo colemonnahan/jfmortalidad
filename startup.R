@@ -22,6 +22,7 @@ df[which.missing,]
 df <- df[-which.missing,]
 nrow(df); nrow(individuo)
 df <- merge(x=individuo, y=df, by.x='Tag_num', by.y='numero')
+df <- droplevels(subset(df, Sex %in% c('M', 'F')))
 CH <- unname(as.matrix(df[, -(1:10)]))
 last <- as.numeric(apply(CH, 1, function(xx)
   tail(which(!is.na(xx) & xx>0), n=1)))
