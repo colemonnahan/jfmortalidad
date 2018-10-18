@@ -35,6 +35,7 @@ counts <- unname(t(apply(CH,1, function(xx){
 data <- list(I=nrow(CH), K=ncol(CH), CH=CH, last=last, counts=counts,
              effort=esfuerzo$Trap_haul/1000, lengths=df$length,
              first=first, sexo=as.numeric(df$Sex)-1,
+             evento=as.numeric(df$Event)-1,
              lengths_pred=seq(min(df$length), max(df$length), len=20),
              esfuerzo_pred=seq(.05, 4, len=20))
 
