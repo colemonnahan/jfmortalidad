@@ -10,7 +10,7 @@ esfuerzo <- read.csv('datos/Effort.txt')
 df <- read.csv("datos/CH_Matrix.csv")
 names(df)[1:2] <- c("numero", "evento")
 df$evento <- as.factor(df$evento)
-individuo <- read.csv("datos/Green_tags.csv")
+individuo <- read.csv("datos/Green_tags_events.csv")
 individuo <- individuo[!is.na(individuo$Size),]
 100*mean(individuo$Size>115)
 individuo$length <- (individuo$Size-1.469)/1.1578
