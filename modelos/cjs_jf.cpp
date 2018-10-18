@@ -62,8 +62,9 @@ Type objective_function<Type>::operator() ()
   // la primero columna es por machos y la segunda por hembras
   matrix<Type> k(K,2);
   for(int t=0;t<K;t++) {
-    k(t,0)=exp(tauM(t));
-    k(t,1)=exp(tauH(t));
+    // non-centered efectos aleatorios
+    k(t,0)=exp(tauM(t)*sigma_tau+mu_tauM);
+    k(t,1)=exp(tauH(t)*sigma_tau+mu_tauH);
   }
 
   // TMB usa indices de 0, no de 1, entoces tenemos que estar cuidadoso, y
@@ -113,8 +114,8 @@ Type objective_function<Type>::operator() ()
   }
 
   // Probabilidad de los efectos aleatorios
-  nll-=dnorm(tauM, mu_tauM, sigma_tau, true).sum();
-  nll-=dnorm(tauH, mu_tauH, sigma_tau, true).sum();
+  nll-=dnorm(tauM, Type(0), Type(1), true).sum();
+  nll-=dnorm(tauH, Type(0), Type(1), true).sum();
   
   vector<Type> sel_pred(lengths_pred.size());
   for(int i=0; i<sel_pred.size(); i++){
