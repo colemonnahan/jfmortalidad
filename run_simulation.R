@@ -1,14 +1,14 @@
 source("startup.R")
 
 ## Construye el modelo
-dyn.unload(dynlib('modelos/cjs_jf'))
-compile('modelos/cjs_jf.cpp')
-dyn.load(dynlib('modelos/cjs_jf'))
+dyn.unload(dynlib('modelos/cjs_jf_sim'))
+compile('modelos/cjs_jf_sim.cpp')
+dyn.load(dynlib('modelos/cjs_jf_sim'))
 
 ## ## Probando que sirve
 ## set.seed(32)
 ## out <- simulator(TRUE)
-## obj <- MakeADFun(data=out$simdata, parameters=out$simpars, DLL='cjs_jf')
+## obj <- MakeADFun(data=out$simdata, parameters=out$simpars, DLL='cjs_jf_sim')
 ## obj$fn()
 ## obj$gr()
 ## rep <- obj$report()
@@ -28,7 +28,7 @@ for(ii in 1:nrep){
   out <- simulator(ii==1)
   ## plot(simdata$last, main='Simulated data')
   ## adjusta el modelo con los datos simulados
-  obj <- MakeADFun(data=out$simdata, parameters=out$simpars, DLL='cjs_jf')
+  obj <- MakeADFun(data=out$simdata, parameters=out$simpars, DLL='cjs_jf_sim')
   obj$env$beSilent()
   opt <- nlminb(obj$par, obj$fn, obj$gr, control=list(trace=0))
   rep <- sdreport(obj)
