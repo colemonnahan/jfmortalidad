@@ -3,11 +3,12 @@ source("startup.R")
 ## Construye el modelo
 compile('modelos/cjs_jf.cpp')
 dyn.load(dynlib('modelos/cjs_jf'))
-pars <- list(logM=log(.03), logr=-10, a=3, b=-.2,
-             tauM=rep(-2,data$K), tauH=rep(-2,data$K),
+pars <- list(logM=log(.1), logr=-10, a=20.6, b=-.24,
+             tauM=rep(0,data$K), tauH=rep(0,data$K),
              mu_tauM=-2, mu_tauH=-2, logsigma_tau=1)
+map <- list(logr=factor(NA), a=factor(NA), b=factor(NA))
 obj <- MakeADFun(data=data, parameters=pars, DLL='cjs_jf',
-                 random=c('tauM', 'tauH'), map=list(logr=factor(NA)))
+                 random=c('tauM', 'tauH'), map=map)
 obj$env$beSilent()
 ## opt <- nlminb(obj$par, obj$fn, obj$gr, control=list(trace=1))
 opt <- TMBhelper::Optimize(obj, control=list(trace=1))
@@ -19,6 +20,8 @@ selex <- est[est$par=='sel_pred',]
 plot(data$lengths_pred, y=selex$est, ylim=c(0,1), pch=16, xlab='Length', ylab='Selex')
 segments(x0=data$lengths_pred, y0=selex$est-1.96*selex$se,
          y1=selex$est+1.96*selex$se)
+xx <- seq(50, 120, len=50)
+lines(xx, 1/(1+exp(pars$a+pars$b*xx)))
 rug(x=data$lengths)
 tmp <- est[est$par=='kM',]
 x <- 1:data$K
