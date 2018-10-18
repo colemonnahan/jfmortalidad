@@ -3,10 +3,11 @@ source("startup.R")
 ## Construye el modelo
 compile('modelos/cjs_jf.cpp')
 dyn.load(dynlib('modelos/cjs_jf'))
-pars <- list(logM=log(.1), logr=-10, a=20.6, b=-.24,
+pars <- list(logNatM=c(-2,-2), logr=-10, a=20.6, b=-.24,
              tau=array(0, dim=c(data$K, 2,3)),
              mu_tau=matrix(-2, nrow=2,ncol=3), logsigma_tau=1)
-map <- list(logr=factor(NA), a=factor(NA), b=factor(NA))
+map <- list(logr=factor(NA), a=factor(NA), b=factor(NA),
+            logNatM=factor(c(1,1)))
 obj <- MakeADFun(data=data, parameters=pars, DLL='cjs_jf',
                  random=c('tau'), map=map)
 obj$env$beSilent()
@@ -15,14 +16,14 @@ opt <- TMBhelper::Optimize(obj, control=list(trace=1))
 rep <- sdreport(obj)
 est <- data.frame(par=names(rep$value), est=rep$value, se=rep$sd)
 
-
 tmp <- cbind(periodo=1:data$K,est[grep('k', est$par),])
 tmp$lwr <- pmax(tmp$est-1.96*tmp$se,0)
 tmp$upr <- tmp$est+1.96*tmp$se
 tmp$genero <- substr(tmp$par,2,2)
 tmp$evento <- as.numeric(substr(tmp$par,3,3))
+tmp$periodo <- tmp$periodo + ifelse(tmp$genero=='M',0,.25)
 g <- ggplot(tmp, aes(periodo, y=est, color=genero)) +
-  geom_pointrange(aes(ymin=lwr, ymax=upr)) +
+  geom_pointrange(aes(ymin=lwr, ymax=upr), fatten=.5) +
   facet_wrap('evento', ncol=1) + ylab("k")
 ggsave('plots/k_by_sex_event.png', g, width=7, height=5)
 

@@ -10,8 +10,7 @@ CH.long$numero <- CH.long$Tag_num
 CH.long$genero <- CH.long$Sex
 CH.long2 <- droplevels(subset(CH.long, !is.na(recapturas) & recapturas>0))
 
-
-g <- ggplot(CH.long2, aes(numero, y=periodo, color=evento)) +
+g <- ggplot(CH.long2, aes(numero, y=periodo, color=factor(Event))) +
   geom_jitter(width=0, alpha=.5, height=.1) + facet_wrap('genero')
 ggsave('plots/CH_matriz.png', g, width=7, height=5)
 g <- ggplot(CH.long2, aes(recapturas)) + geom_bar() + scale_y_log10() +

@@ -33,7 +33,7 @@ Type objective_function<Type>::operator() ()
   DATA_VECTOR(esfuerzo_pred); // para calcular catchability
   
   // efectos fijos
-  PARAMETER(logM);		// mortalidad de naturleza
+  PARAMETER_VECTOR(logNatM);	// mortalidad de naturleza (H y M)
   PARAMETER(logr);		// effecto de los numeros de capturas
   //  PARAMETER(logk);		// effecto de esfuerza de probabilidad de captura
   PARAMETER(a); 		// efecto de la selectividad
@@ -51,7 +51,8 @@ Type objective_function<Type>::operator() ()
   chi.setZero();
 
   int kk;
-  Type M=exp(logM);
+  vector<Type> NatM;
+  NatM=exp(logNatM);
   Type r=exp(logr);
   Type sigma_tau=exp(logsigma_tau);
   // la primero columna es por machos y la segunda por hembras
@@ -69,14 +70,14 @@ Type objective_function<Type>::operator() ()
   // uso un "-1" para ser claro que pasa.
   for(int i=0; i<I; i++){ // iterando sobre cada individuos
     // inicializacion estan vivo en periodo uno
-    phi(i,first(i)-1)=exp(-M-counts(i,first(i)-1)*r);
+    phi(i,first(i)-1)=exp(-NatM(sexo(i))-counts(i,first(i)-1)*r);
     p(i,first(i)-1)=1;
     for(int t=first(i); t<K; t++) {
       // calcular prob. capturas como una funcion de efectos y covariables
       p(i,t) = (1-exp(-k(t,sexo(i),evento(i))*effort(t)))/(1+exp(a+b*lengths(i)));
       // calcular prob. sobrevivencia como una funcion de efectos y
       // covariables
-      phi(i,t) = exp(-M-counts(i,t-1)*r);
+      phi(i,t) = exp(-NatM(sexo(i))-counts(i,t-1)*r);
     }
     // la probabilidad de no ser visto nunca mas, usa un indice reverso
     // para calcular hacia atras usando recursion.
@@ -150,8 +151,12 @@ Type objective_function<Type>::operator() ()
   ADREPORT(kH1);
   ADREPORT(kH2);
   ADREPORT(kH3);
-  ADREPORT(M);
   ADREPORT(r);
+
+  Type NatMortH=NatM(0);
+  Type NatMortM=NatM(1);
+  ADREPORT(NatMortH);
+  ADREPORT(NatMortM);
   // ADREPORT(a);
   // ADREPORT(b);
   //  ADREPORT(sel_pred);
