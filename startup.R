@@ -13,7 +13,7 @@ df$evento <- as.factor(df$evento)
 individuo <- read.csv("datos/Green_tags_events.csv")
 individuo <- individuo[!is.na(individuo$Size),]
 100*mean(individuo$Size>115)
-individuo$length <- (individuo$Size-1.469)/1.1578
+individuo$length <- individuo$Size #(individuo$Size-1.469)/1.1578
 sum(duplicated(unique(individuo$Tag_num)))
 sum(duplicated(unique(df$numero)))
 which.missing <- which(! df$numero %in% individuo$Tag_num)
@@ -23,6 +23,7 @@ df <- df[-which.missing,]
 nrow(df); nrow(individuo)
 df <- merge(x=individuo, y=df, by.x='Tag_num', by.y='numero')
 df <- droplevels(subset(df, Sex %in% c('M', 'F')))
+## df <- subset(df, length > 100)
 CH <- unname(as.matrix(df[, -(1:10)]))
 last <- as.numeric(apply(CH, 1, function(xx)
   tail(which(!is.na(xx) & xx>0), n=1)))
@@ -36,7 +37,7 @@ data <- list(I=nrow(CH), K=ncol(CH), CH=CH, last=last, counts=counts,
              effort=esfuerzo$Trap_haul/1000, lengths=df$length,
              first=first, sexo=as.numeric(df$Sex)-1,
              evento=as.numeric(df$Event)-1,
-             lengths_pred=seq(min(df$length), max(df$length), len=20),
+             lengths_pred=seq(50, 110, len=30),
              esfuerzo_pred=seq(.05, 4, len=20))
 
 

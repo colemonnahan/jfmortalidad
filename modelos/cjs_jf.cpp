@@ -74,7 +74,7 @@ Type objective_function<Type>::operator() ()
     p(i,first(i)-1)=1;
     for(int t=first(i); t<K; t++) {
       // calcular prob. capturas como una funcion de efectos y covariables
-      p(i,t) = (1-exp(-k(t,sexo(i),evento(i))*effort(t)))/(1+exp(a+b*lengths(i)));
+      p(i,t) = (1-exp(-k(t,sexo(i),evento(i))*effort(t)))/(1+exp(-a*(lengths(i)-b)));
       // calcular prob. sobrevivencia como una funcion de efectos y
       // covariables
       phi(i,t) = exp(-NatM(sexo(i))-counts(i,t-1)*r);
@@ -122,7 +122,7 @@ Type objective_function<Type>::operator() ()
   
   vector<Type> sel_pred(lengths_pred.size());
   for(int i=0; i<sel_pred.size(); i++){
-    sel_pred(i)=1/(1+exp(a+b*lengths_pred(i)));
+    sel_pred(i)=1/(1+exp(-a*(lengths_pred(i)-b)));
   }
   // vector<Type> catchabilityM_pred(esfuerzo_pred.size());
   // vector<Type> catchabilityH_pred(esfuerzo_pred.size());
@@ -159,10 +159,10 @@ Type objective_function<Type>::operator() ()
   ADREPORT(NatMortM);
   // ADREPORT(a);
   // ADREPORT(b);
-  //  ADREPORT(sel_pred);
+   ADREPORT(sel_pred);
   // ADREPORT(catchabilityM_pred);
   // ADREPORT(catchabilityH_pred);
-  // REPORT(p);
+  REPORT(p);
   // REPORT(phi);
   // REPORT(CH);
   return(nll);

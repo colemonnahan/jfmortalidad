@@ -3,11 +3,11 @@ source("startup.R")
 ## Construye el modelo
 compile('modelos/cjs_jf.cpp')
 dyn.load(dynlib('modelos/cjs_jf'))
-pars <- list(logNatM=c(-2,-2), logr=-10, a=20.6, b=-.24,
+pars <- list(logNatM=c(-2,-2), logr=-10, a=1, b=80,
              tau=array(0, dim=c(data$K, 2,3)),
              mu_tau=matrix(-2, nrow=2,ncol=3), logsigma_tau=1)
-map <- list(logr=factor(NA), a=factor(NA), b=factor(NA),
-            logNatM=factor(c(1,1)))
+map <- list(logr=factor(NA),# a=factor(NA), b=factor(NA),
+            logNatM=factor(c(1,2)))
 obj <- MakeADFun(data=data, parameters=pars, DLL='cjs_jf',
                  random=c('tau'), map=map)
 obj$env$beSilent()
