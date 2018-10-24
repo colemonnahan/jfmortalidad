@@ -6,7 +6,7 @@ dyn.load(dynlib('modelos/cjs_jf'))
 pars <- list(logNatM=c(-2,-2), logr=-10, a=1, b=80,
              tau=array(0, dim=c(data$K, 2,3)),
              mu_tau=matrix(-2, nrow=2,ncol=3), logsigma_tau=1)
-map <- list(logr=factor(NA),# a=factor(NA), b=factor(NA),
+map <- list(logr=factor(NA), a=factor(NA), b=factor(NA),
             logNatM=factor(c(1,2)))
 obj <- MakeADFun(data=data, parameters=pars, DLL='cjs_jf',
                  random=c('tau'), map=map)
@@ -26,6 +26,13 @@ g <- ggplot(tmp, aes(periodo, y=est, color=genero)) +
   geom_pointrange(aes(ymin=lwr, ymax=upr), fatten=.5) +
   facet_wrap('evento', ncol=1) + ylab("k")
 ggsave('plots/k_by_sex_event.png', g, width=7, height=5)
+
+
+xx <- droplevels(est[grep('sel_pred', est$par),])
+plot(data$lengths_pred, xx$est, ylim=c(0,1), xlim=c(50,130))
+lines(data$lengths_pred, xx$est+ xx$se*1.96)
+lines(data$lengths_pred, xx$est- xx$se*1.96)
+rug(data$lengths)
 
 ## par(mfrow=c(3,1))
 ## x <- 1:data$K
