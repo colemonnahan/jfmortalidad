@@ -50,9 +50,6 @@ Type objective_function<Type>::operator() ()
   Type M=exp(logM);
   Type r=exp(logr);
   Type k=exp(logk);
-  // Selectividad es asumido conocido
-  // Type a=20.65;
-  // Type b=-.24;
     
   // TMB usa indices de 0, no de 1, entoces tenemos que estar cuidadoso, y
   // uso un "-1" para ser claro que pasa.
@@ -62,7 +59,7 @@ Type objective_function<Type>::operator() ()
     p(i,first(i)-1)=1;
     for(int t=first(i); t<K; t++) {
       // calcular prob. capturas como una funcion de efectos y covariables
-      p(i,t) = 1*(1-exp(-k*effort(t)))/(1+exp(a+b*lengths(i)));
+      p(i,t) = 1*(1-exp(-k*effort(t)))/(1+exp(-a*(lengths(i)-b)));
       // calcular prob. sobrevivencia como una funcion de efectos y
       // covariables
       phi(i,t) = exp(-M-counts(i,t-1)*r);
@@ -100,10 +97,10 @@ Type objective_function<Type>::operator() ()
     nll-= log(chi(i,last(i)+1-1));
   }
 
-  vector<Type> sel_pred(lengths_pred.size());
-  for(int i=0; i<sel_pred.size(); i++){
-    sel_pred(i)=1/(1+exp(a+b*lengths_pred(i)));
-  }
+  // vector<Type> sel_pred(lengths_pred.size());
+  // for(int i=0; i<sel_pred.size(); i++){
+  //   sel_pred(i)=1/(1+exp(a+b*lengths_pred(i)));
+  // }
   
   // reportando
   ADREPORT(M);
@@ -111,7 +108,7 @@ Type objective_function<Type>::operator() ()
   ADREPORT(k);
   ADREPORT(a);
   ADREPORT(b);
-  ADREPORT(sel_pred);
+  //  ADREPORT(sel_pred);
   REPORT(p);
   REPORT(phi);
   REPORT(CH);

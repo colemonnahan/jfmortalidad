@@ -59,8 +59,8 @@ simulator <- function(make.plots){
   r <- .01
   k <- .0001
   ## Selectividad
-  a <- 20.65
-  b <- -.24
+  a <- .2
+  b <- 90
   ## componente de observacion
   counts <- matrix(0, I,K)
   alive <- p <- CH <- matrix(NA, I,K)
@@ -87,7 +87,7 @@ simulator <- function(make.plots){
       phi[i,t] <- exp(-M-counts[i,t-1]*r)
       ## calcula probabilidad de recaptura para todos los periodos except el
       ## primero porque conocido (captura)
-      p[i,t] <- 1*(1-exp(-k*effort[t]))/(1+exp(a+b*lengths[i]))
+      p[i,t] <- 1*(1-exp(-k*effort[t]))/(1+exp(-a*(lengths[i]-b)))
       ## actualiza esta probabilidad por la longitud
       ## vida ahora solo si vida y sobrevivido en el periodo anterior
       alive[i,t] <- alive[i,t-1]*rbinom(n=1, size=1, prob=phi[i,t-1])
@@ -104,12 +104,12 @@ simulator <- function(make.plots){
   simpars <- list(logM=log(M), logr=log(r), logk=log(k), a=a, b=b)
   if(make.plots){
     par(mfcol=c(2,2))
-    x <- seq(50,120, len=1000)
-    plot(x, (1-exp(-k*2000))/(1+exp(a+b*x)), ylab='Prob. captura',
-         type='l', xlim=c(50,120), ylim=c(0,1), xlab='Longitud')
+    x <- seq(70,120, len=1000)
+    plot(x, (1-exp(-k*max(effort)))/(1+exp(-a*(x-b))), ylab='Prob. captura',
+         type='l',   xlab='Longitud')
     legend('topleft', legend=c('Max. Esfuerzo', 'Min. Esfuerzo'), lty=1, col=c(1,2))
-    lines(x, (1-exp(-k*500))/(1+exp(a+b*x)), col='red')
-    hist(lengths, xlim=c(50,120), xlab='Longitud')
+    lines(x, (1-exp(-k*min(effort[effort>0])))/(1+exp(-a*(x-b))), col='red')
+    hist(lengths, xlim=c(70,120), xlab='Longitud')
     plot(0,0, xlim=c(1,K), ylim=c(0,1), xlab='Periodo',
          ylab='Pr. captura de 5 individuos',
          type='n')
@@ -121,10 +121,3 @@ simulator <- function(make.plots){
   }
   return(list(simdata=simdata, simpars=simpars, p=p, phi=phi))
 }
-## test <- simulator(1)
-## CH.long <- melt(test$simdata$CH)
-## names(CH.long) <- c("numero", "periodo", "recapturas")
-## CH.long2 <- droplevels(subset(CH.long, !is.na(recapturas) & recapturas>0))
-## g <- ggplot(CH.long2, aes(numero, y=periodo)) +
-##   geom_jitter(width=0, alpha=.5, height=.1)
-## g

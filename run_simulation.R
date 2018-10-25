@@ -28,7 +28,8 @@ for(ii in 1:nrep){
   out <- simulator(ii==1)
   ## plot(simdata$last, main='Simulated data')
   ## adjusta el modelo con los datos simulados
-  obj <- MakeADFun(data=out$simdata, parameters=out$simpars, DLL='cjs_jf_sim')
+  obj <- MakeADFun(data=out$simdata, parameters=out$simpars,
+                   DLL='cjs_jf_sim')
   obj$env$beSilent()
   opt <- nlminb(obj$par, obj$fn, obj$gr, control=list(trace=0))
   rep <- sdreport(obj)
