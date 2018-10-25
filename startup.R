@@ -55,11 +55,11 @@ simulator <- function(make.plots){
   ##
   ## los parametros de usar en la simulacion, por ahora son iguales que el
   ## adjuste de los datos reales.
-  M <- .03
+  M <- .09/24
   r <- .01
-  k <- .0001
+  k <- .00005
   ## Selectividad
-  a <- .2
+  a <- .4
   b <- 90
   ## componente de observacion
   counts <- matrix(0, I,K)
@@ -72,6 +72,7 @@ simulator <- function(make.plots){
   effort[16:24] <- 0
   ## las longitudes de los individuos de los datos reales
   lengths <- sample(na.omit(individuo$length), size=I, replace=TRUE)
+  events <- rep(NA, len=I)
   for(i in 1:I){
     if(i <= 3000) t0 <- 1
     if(i > 3000 & i <= 5000) t0 <- 10
@@ -110,7 +111,7 @@ simulator <- function(make.plots){
     legend('topleft', legend=c('Max. Esfuerzo', 'Min. Esfuerzo'), lty=1, col=c(1,2))
     lines(x, (1-exp(-k*min(effort[effort>0])))/(1+exp(-a*(x-b))), col='red')
     hist(lengths, xlim=c(70,120), xlab='Longitud')
-    plot(0,0, xlim=c(1,K), ylim=c(0,1), xlab='Periodo',
+    plot(0,0, xlim=c(1,K), ylim=c(0,.25), xlab='Periodo',
          ylab='Pr. captura de 5 individuos',
          type='n')
     trash <- sapply(1:5, function(i) lines(2:K, p[i,-1], col=1))

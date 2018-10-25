@@ -19,7 +19,7 @@ dyn.load(dynlib('modelos/cjs_jf_sim'))
 
 ### Ahora simulamos datos similares que los reales y los adjustamos. Tienes
 ### que correr el codigo abajo primero.
-nrep <- 50  ## numero de iteraciones de monte carlo
+nrep <- 20  ## numero de iteraciones de monte carlo
 coverage.list <- results.list <- list()
 ## no se puede usar la variable 'i' porque es usada en el archivo
 ## simulator.R
