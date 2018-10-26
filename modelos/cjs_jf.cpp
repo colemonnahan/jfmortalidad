@@ -41,6 +41,7 @@ Type objective_function<Type>::operator() ()
   PARAMETER_ARRAY(tau);		// efectos aleatorios por k por machos
   PARAMETER_MATRIX(mu_tau);	// los promedios de los efectos aleatorios
   PARAMETER(logsigma_tau);	// la varianza de todos los efectos aleatorios
+  PARAMETER(slope);
   Type nll=0.0;			// negativa log verosimiltud
   matrix<Type> p(I,K); 		// probabilidad de las capturas
   matrix<Type> phi(I,K);	// prob. de la sobrevivencia
@@ -61,8 +62,10 @@ Type objective_function<Type>::operator() ()
   for(int t=0;t<K;t++) { // periodos
     for(int ev=0; ev<3; ev++){ // eventos
     // non-centered efectos aleatorios
-      k(t,0,ev)=exp(tau(t,0,ev)*sigma_tau+mu_tau(0,ev)); // machos
-      k(t,1,ev)=exp(tau(t,1,ev)*sigma_tau+mu_tau(1,ev)); // hembras
+      // k(t,0,ev)=exp(tau(t,0,ev)*sigma_tau+mu_tau(0,ev)); // machos
+      // k(t,1,ev)=exp(tau(t,1,ev)*sigma_tau+mu_tau(1,ev)); // hembras
+      k(t,0,ev)=inv_logit(slope*effort(t)+(tau(t,0,ev)*sigma_tau+mu_tau(0,ev))); // machos
+      k(t,1,ev)=inv_logit(slope*effort(t)+(tau(t,1,ev)*sigma_tau+mu_tau(1,ev))); // hembras
     }
   }
 
@@ -74,7 +77,8 @@ Type objective_function<Type>::operator() ()
     p(i,first(i)-1)=1;
     for(int t=first(i); t<K; t++) {
       // calcular prob. capturas como una funcion de efectos y covariables
-      p(i,t) = (1-exp(-k(t,sexo(i),evento(i))*effort(t)))/(1+exp(-a*(lengths(i)-b)));
+      // p(i,t) = (1-exp(-k(t,sexo(i),evento(i))*effort(t)))/(1+exp(-a*(lengths(i)-b)));
+      p(i,t)=k(t,sexo(i),evento(i));
       // calcular prob. sobrevivencia como una funcion de efectos y
       // covariables
       phi(i,t) = exp(-NatM(sexo(i))-counts(i,t-1)*r);
