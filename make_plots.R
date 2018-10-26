@@ -9,7 +9,8 @@ CH.long$periodo <- as.numeric(gsub("X", "", x=CH.long$periodo))
 CH.long$numero <- CH.long$Tag_num
 CH.long$genero <- CH.long$Sex
 CH.long2 <- droplevels(subset(CH.long, !is.na(recapturas) & recapturas>0))
-CH.long2 <- CH.long2[,c('numero', 'periodo', 'recapturas', 'genero', 'Event')]
+CH.long2 <- CH.long2[,c('numero', 'periodo', 'recapturas', 'genero',
+                'Event', 'length')]
 CH.long2$data <- "real"
 g <- ggplot(CH.long2, aes(numero, y=periodo, color=factor(Event))) +
   geom_jitter(width=0, alpha=.5, height=.1) + facet_grid(genero~data)
@@ -20,6 +21,9 @@ ggsave('plots/CH_matriz.png', g, width=7, height=5)
 test <- simulator(1)
 CH2.long <- melt(test$simdata$CH)
 names(CH2.long) <- c("numero", "periodo", "recapturas")
+CH2.long <- merge(CH2.long, y=data.frame(length=test$simdata$lengths,
+                                     numero=1:test$simdata$I),
+              by='numero')
 CH2.long$genero <- sample(x=c("M", "F"), size=nrow(CH2.long), repl=TRUE)
 CH2.long$Event <- 1
 CH2.long2 <- droplevels(subset(CH2.long, !is.na(recapturas) & recapturas>0))
@@ -40,7 +44,8 @@ xx <- ddply(CH.long2, .(numero, genero, data), summarize,
             recapturas.total=sum(recapturas),
             recapturas.periodo=length(recapturas),
             periodo.rango=max(periodo)-min(periodo),
-            periodo.primero=min(periodo))
+            periodo.primero=min(periodo),
+            length=length[1])
 g <- ggplot(xx, aes(recapturas.total))  + geom_bar() +# scale_y_log10() +
   xlab("Numero de recapturas") +facet_grid(genero~data)
 ggsave('plots/recapturas_total.png', g, width=ww, height=hh)
@@ -55,5 +60,6 @@ g <- ggplot(xx, aes(periodo.primero, periodo.rango)) +
   xlab('Periodo de la primera captura') +
   ylab("Rango de los periodos de captura") +facet_grid(genero~data)
 ggsave('plots/rango_primero.png', g, width=ww, height=hh)
-
-
+g <- ggplot(xx, aes(length, recapturas.periodo)) + geom_jitter(alpha=.5,
+            size=.1, width=0) + facet_grid(.~data)
+ggsave('plots/length_vs_recapturas.png', g, width=ww, height=hh)

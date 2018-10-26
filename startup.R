@@ -71,7 +71,7 @@ simulator <- function(make.plots){
   effort <- runif(K, min=500, max=2000)
   effort[16:24] <- 0
   ## las longitudes de los individuos de los datos reales
-  lengths <- sample(na.omit(individuo$length), size=I, replace=TRUE)
+  lengths <- sample(na.omit(df$length), size=I, replace=TRUE)
   events <- rep(NA, len=I)
   for(i in 1:I){
     if(i <= 3000) t0 <- 1
