@@ -57,7 +57,7 @@ simulator <- function(make.plots){
   ## adjuste de los datos reales.
   M <- .09/24
   r <- .01
-  k <- .00005
+  k <- .0001
   ## Selectividad
   a <- .4
   b <- 90

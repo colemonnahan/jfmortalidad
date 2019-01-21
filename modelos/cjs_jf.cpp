@@ -41,6 +41,7 @@ Type objective_function<Type>::operator() ()
   PARAMETER_ARRAY(tau);		// efectos aleatorios por k por machos
   PARAMETER_MATRIX(mu_tau);	// los promedios de los efectos aleatorios
   PARAMETER(logsigma_tau);	// la varianza de todos los efectos aleatorios
+  PARAMETER(theta); 		// la maxima probabilidad de captura
   Type nll=0.0;			// negativa log verosimiltud
   matrix<Type> p(I,K); 		// probabilidad de las capturas
   matrix<Type> phi(I,K);	// prob. de la sobrevivencia
@@ -52,6 +53,8 @@ Type objective_function<Type>::operator() ()
 
   int kk;
   vector<Type> NatM;
+  Type max_prob=inv_logit(theta);
+
   NatM=exp(logNatM);
   Type r=exp(logr);
   Type sigma_tau=exp(logsigma_tau);
@@ -74,7 +77,7 @@ Type objective_function<Type>::operator() ()
     p(i,first(i)-1)=1;
     for(int t=first(i); t<K; t++) {
       // calcular prob. capturas como una funcion de efectos y covariables
-      p(i,t) = (1-exp(-k(t,sexo(i),evento(i))*effort(t)))/(1+exp(-a*(lengths(i)-b)));
+      p(i,t) =max_prob*(1-exp(-k(t,sexo(i),evento(i))*effort(t)))/(1+exp(-a*(lengths(i)-b)));
       // calcular prob. sobrevivencia como una funcion de efectos y
       // covariables
       phi(i,t) = exp(-NatM(sexo(i))-counts(i,t-1)*r);
@@ -120,9 +123,11 @@ Type objective_function<Type>::operator() ()
     }
   }
   
-  vector<Type> sel_pred(lengths_pred.size());
-  for(int i=0; i<sel_pred.size(); i++){
-    sel_pred(i)=1/(1+exp(-a*(lengths_pred(i)-b)));
+  vector<Type> pcap_pred(lengths_pred.size());
+  for(int i=0; i<pcap_pred.size(); i++){
+    // The probability of capture as function of length given maximum effort 
+    pcap_pred(i)=max_prob*(1-exp(-k(0,0,0)*Type(3.5)))/(1+exp(-a*(lengths_pred(i)-b)));
+    //      1/(1+exp(-a*(lengths_pred(i)-b)));
   }
   // vector<Type> catchabilityM_pred(esfuerzo_pred.size());
   // vector<Type> catchabilityH_pred(esfuerzo_pred.size());
@@ -159,7 +164,8 @@ Type objective_function<Type>::operator() ()
   ADREPORT(NatMortM);
   // ADREPORT(a);
   // ADREPORT(b);
-   ADREPORT(sel_pred);
+  ADREPORT(pcap_pred);
+  ADREPORT(max_prob);
   // ADREPORT(catchabilityM_pred);
   // ADREPORT(catchabilityH_pred);
   REPORT(p);

@@ -5,14 +5,15 @@ compile('modelos/cjs_jf.cpp')
 dyn.load(dynlib('modelos/cjs_jf'))
 pars <- list(logNatM=c(-7,-7), logr=-10, a=.4, b=90,
              tau=array(0, dim=c(data$K, 2,3)),
-             mu_tau=matrix(-2, nrow=2,ncol=3), logsigma_tau=1)
-map <- list(logr=factor(NA), a=factor(NA), b=factor(NA),
+             mu_tau=matrix(-2, nrow=2,ncol=3), logsigma_tau=1,
+             theta=0)
+map <- list(logr=factor(NA), #a=factor(NA), b=factor(NA),
             logNatM=factor(c(1,2)))
 obj <- MakeADFun(data=data, parameters=pars, DLL='cjs_jf',
                  random=c('tau'), map=map)
 obj$env$beSilent()
 ## opt <- nlminb(obj$par, obj$fn, obj$gr, control=list(trace=1))
-opt <- TMBhelper::Optimize(obj, control=list(trace=1))
+opt <- TMBhelper::Optimize(obj, control=list(trace=10))
 rep <- sdreport(obj)
 est <- data.frame(par=names(rep$value), est=rep$value, se=rep$sd)
 
@@ -28,7 +29,7 @@ g <- ggplot(tmp, aes(periodo, y=est, color=genero)) +
 ggsave('plots/k_by_sex_event.png', g, width=7, height=5)
 
 
-xx <- droplevels(est[grep('sel_pred', est$par),])
+xx <- droplevels(est[grep('pcap_pred', est$par),])
 plot(data$lengths_pred, xx$est, ylim=c(0,1), xlim=c(50,130))
 lines(data$lengths_pred, xx$est+ xx$se*1.96)
 lines(data$lengths_pred, xx$est- xx$se*1.96)
