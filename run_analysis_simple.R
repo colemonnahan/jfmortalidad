@@ -1,36 +1,40 @@
 source("startup.R")
+## data$CH[is.na(data$CH)] <- 0
 
 ## Construye el modelo
-compile('modelos/cjs_jf.cpp')
-dyn.load(dynlib('modelos/cjs_jf'))
-pars <- list(logNatM=c(-7,-7), logr=-10, a=.4, b=90,
-             tau=array(0, dim=c(data$K, 2,3)),
-             mu_tau=matrix(-2, nrow=2,ncol=3), logsigma_tau=1,
-             theta=0)
-map <- list(logr=factor(NA), #a=factor(NA), b=factor(NA),
-            logNatM=factor(c(1,2)))
-obj <- MakeADFun(data=data, parameters=pars, DLL='cjs_jf',
-                 random=c('tau'), map=map)
+dyn.unload(dynlib('modelos/cjs_jf_simple'))
+compile('modelos/cjs_jf_simple.cpp')
+dyn.load(dynlib('modelos/cjs_jf_simple'))
+pars <- list(phi2=rep(-3, data$K),
+             p2=rep(-5, data$K))
+pars$phi2[1] <- 5
+## map <- list(logr=factor(NA), a=factor(NA), b=factor(NA),
+##             logNatM=factor(c(1,2)))
+mapp <- 1:data$K
+mapphi <- 1:data$K
+mapp[16:24] <- NA
+mapphi[c(1,29)] <- NA
+map <- list(p2=factor(mapp), phi2=factor(mapphi))
+## map <- NULL
+obj <- MakeADFun(data=data, parameters=pars, DLL='cjs_jf_simple',
+                 map=map)
 obj$env$beSilent()
 ## opt <- nlminb(obj$par, obj$fn, obj$gr, control=list(trace=1))
 opt <- TMBhelper::Optimize(obj, control=list(trace=10))
 rep <- sdreport(obj)
 est <- data.frame(par=names(rep$value), est=rep$value, se=rep$sd)
-
-tmp <- cbind(periodo=1:data$K,est[grep('k', est$par),])
+tmp <- cbind(periodo=1:data$K,est)
 tmp$lwr <- pmax(tmp$est-1.96*tmp$se,0)
 tmp$upr <- tmp$est+1.96*tmp$se
-tmp$genero <- substr(tmp$par,2,2)
-tmp$evento <- as.numeric(substr(tmp$par,3,3))
-tmp$periodo <- tmp$periodo + ifelse(tmp$genero=='M',0,.25)
-g <- ggplot(tmp, aes(periodo, y=est, color=genero)) +
-  geom_pointrange(aes(ymin=lwr, ymax=upr), fatten=.5) +
-  facet_wrap('evento', ncol=1) + ylab("k")
-ggsave('plots/k_by_sex_event.png', g, width=7, height=5)
+tmp$par2 <- ifelse(tmp$par=='p3', 'p', 'phi')
+g <- ggplot(tmp, aes(periodo, y=est, color=par2)) +
+  geom_pointrange(aes(ymin=lwr, ymax=upr), fatten=.5)
+g
 
 
-xx <- droplevels(est[grep('pcap_pred', est$par),])
-plot(data$lengths_pred, xx$est, ylim=c(0,1))
+
+xx <- droplevels(est[grep('sel_pred', est$par),])
+plot(data$lengths_pred, xx$est, ylim=c(0,1), xlim=c(50,130))
 lines(data$lengths_pred, xx$est+ xx$se*1.96)
 lines(data$lengths_pred, xx$est- xx$se*1.96)
 rug(data$lengths)
